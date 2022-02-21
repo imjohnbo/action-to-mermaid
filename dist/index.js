@@ -16007,13 +16007,13 @@ async function run() {
             throw new Error('Action is not of format "owner/name".');
         }
 
-        const action = await getAction(nwo, octokit);
+        const { contents, aInYaml } = await getAction(nwo, octokit);
 
-        if (!action) {
+        if (!contents) {
             throw new Error(`${nwo} doesn't appear to have an action.yml or action.yaml.`);
         }
 
-        const mermaid = convertActionToMermaid(action);
+        const mermaid = convertActionToMermaid(contents, { nwo, aInYaml });
 
         // '```mermaid\n```' length is 14
         if (mermaid.length === 14) {
@@ -16042,7 +16042,10 @@ async function getAction(nwo, octokit) {
             }
         });
         if (contents) {
-            return contents;
+            return { 
+                contents,
+                aInYaml: false
+            };
         }
     } catch (error) {
         let { data: contents } = await octokit.rest.repos.getContent({
@@ -16054,10 +16057,15 @@ async function getAction(nwo, octokit) {
             }
         });
         if (contents) {
-            return contents;
+            return {
+                contents,
+                aInYaml: true
+            };
         }
         else {
-            return null;
+            return {
+                contents: null
+            };
         }
     }
 }
@@ -16068,9 +16076,10 @@ function isValidAction(nwo) {
     return regex.test(nwo);
 }
 
-function convertActionToMermaid(contents) {
+function convertActionToMermaid(contents, options) {
     core.debug(`Converting content to mermaid: ${contents}`);
     const json = yaml.parse(contents);
+    core.debug(`Converted yaml as json: ${JSON.stringify(json)}`);
     if (Object.keys(json).length === 0) {
         throw new Error('Action is empty');
     }
@@ -16080,7 +16089,7 @@ function convertActionToMermaid(contents) {
     mermaid += handleInputs(json, name);
     mermaid += handleOutputs(json, name);
     mermaid += handleClassDefs(json);
-    mermaid += handleClicks(json);
+    mermaid += handleClicks(json, { contents, nwo: options.nwo, aInYaml: options.aInYaml });
     mermaid += '```';
     core.debug(`Converted mermaid: ${mermaid}`);
     return mermaid;
@@ -16131,8 +16140,46 @@ function handleClassDefs(json) {
     return classDef;
 }
 
-function handleClicks(json) {
-    return '';
+function handleClicks(json, options) {
+    let str = ``;
+
+    // get a list of all the inputs and their matching line numbers
+    const inputs = Object.keys(json.inputs);
+    const inputLines = {};
+    for (const input of inputs) {
+        const line = getLineNumber(options.contents, input);
+        inputLines[input] = line;
+        str += `click ${input} "${makeClickLink(options.nwo, options.aInYaml, line)}"\n`;
+    }
+    // get a list of all the outputs and their matching line numbers
+    const outputs = Object.keys(json.outputs);
+    const outputLines = {};
+    for (const output of outputs) {
+        const line = getLineNumber(options.contents, output);
+        outputLines[output] = line;
+        str += `click ${output} "${makeClickLink(options.nwo, options.aInYaml, line)}"\n`;
+    }
+    core.debug(`inputLines: ${JSON.stringify(inputLines)}`);
+    core.debug(`outputLines: ${JSON.stringify(outputLines)}`);
+
+    return str;
+}
+
+function makeClickLink(nwo, aInYaml, line) {
+    return `${process.env.GITHUB_SERVER_URL}/${nwo}/blob/main/action.y${aInYaml ? 'a' : ''}ml#L${line}`;
+}
+
+function getLineNumber(contents, input) {
+    const regex = new RegExp(`${input}`, 'g');
+    const lines = contents.split('\n');
+    let line = 1;
+    for (const l of lines) {
+        if (regex.test(l)) {
+            return line;
+        }
+        line++;
+    }
+    return null;
 }
 
 })();
