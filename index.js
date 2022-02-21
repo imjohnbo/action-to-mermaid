@@ -117,7 +117,6 @@ function handleInputs(json, name) {
     for (const input of inputs) {
         const required = json.inputs[input].required ? 'required' : 'optional';
         str += `${input}:::${required}-->action(${name}):::action\n`;
-        counter++;
     }
     return str;
 }
@@ -127,7 +126,6 @@ function handleOutputs(json, name) {
     let str = ``;
     for (const output of outputs) {
         str += `action(${name})-->${output}:::output\n`;
-        counter++;
     }
     return str;
 }
