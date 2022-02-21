@@ -112,7 +112,7 @@ function getName(json) {
 }
 
 function handleInputs(json, name) {
-    const inputs = Object.keys(json.inputs);
+    const inputs = json.inputs ? Object.keys(json.inputs) : [];
     let str = ``;
     for (const input of inputs) {
         const required = json.inputs[input].required ? 'required' : 'optional';
@@ -122,7 +122,7 @@ function handleInputs(json, name) {
 }
 
 function handleOutputs(json, name) {
-    const outputs = Object.keys(json.outputs);
+    const outputs = json.outputs ? Object.keys(json.outputs) : [];
     let str = ``;
     for (const output of outputs) {
         str += `action(${name})-->${output}:::output\n`;
