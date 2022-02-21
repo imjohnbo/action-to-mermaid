@@ -16106,10 +16106,9 @@ function getName(json) {
 function handleInputs(json, name) {
     const inputs = Object.keys(json.inputs);
     let str = ``;
-    let counter = 1;
     for (const input of inputs) {
         const required = json.inputs[input].required ? 'required' : 'optional';
-        str += `input${counter}(${input}):::${required}-->action(${name}):::action\n`;
+        str += `${input}:::${required}-->action(${name}):::action\n`;
         counter++;
     }
     return str;
@@ -16118,9 +16117,8 @@ function handleInputs(json, name) {
 function handleOutputs(json, name) {
     const outputs = Object.keys(json.outputs);
     let str = ``;
-    let counter = 1;
     for (const output of outputs) {
-        str += `action(${name})-->output${counter}(${output}):::output\n`;
+        str += `action(${name})-->${output}:::output\n`;
         counter++;
     }
     return str;
