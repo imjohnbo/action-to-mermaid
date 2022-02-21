@@ -88,7 +88,7 @@ function convertActionToMermaid(contents, options) {
     core.debug(`Converting content to mermaid: ${contents}`);
     const json = yaml.parse(contents);
     core.debug(`Converted yaml as json: ${JSON.stringify(json)}`);
-    if (Object.keys(json).length === 0) {
+    if (json && Object.keys(json).length === 0) {
         throw new Error('Action is empty');
     }
     let mermaid = '```mermaid\n';
@@ -112,6 +112,7 @@ function getName(json) {
 }
 
 function handleInputs(json, name) {
+    core.debug(`Handling inputs for action: ${name}`);
     const inputs = json.inputs ? Object.keys(json.inputs) : [];
     let str = ``;
     for (const input of inputs) {
@@ -122,6 +123,7 @@ function handleInputs(json, name) {
 }
 
 function handleOutputs(json, name) {
+    core.debug(`Handling output for action: ${name}`);
     const outputs = json.outputs ? Object.keys(json.outputs) : [];
     let str = ``;
     for (const output of outputs) {
@@ -131,6 +133,7 @@ function handleOutputs(json, name) {
 }
 
 function handleClassDefs(json) {
+    core.debug(`Handling class defs for action: ${json.name}`);
     let classDef = ``;
     classDef += `classDef required fill:#6ba06a,stroke:#333,stroke-width:3px\n`;
     classDef += `classDef optional fill:#d9b430,stroke:#333,stroke-width:3px\n`;
@@ -145,10 +148,11 @@ function handleClassDefs(json) {
 }
 
 function handleClicks(json, options) {
+    core.debug(`Handling clicks for action: ${json.name}`);
     let str = ``;
 
     // get a list of all the inputs and their matching line numbers
-    const inputs = Object.keys(json.inputs);
+    const inputs = json.inputs ? Object.keys(json.inputs) : [];
     const inputLines = {};
     for (const input of inputs) {
         const line = getLineNumber(options.contents, input);
@@ -156,7 +160,7 @@ function handleClicks(json, options) {
         str += `click ${input} "${makeClickLink(options.nwo, options.aInYaml, line)}"\n`;
     }
     // get a list of all the outputs and their matching line numbers
-    const outputs = Object.keys(json.outputs);
+    const outputs = json.outputs ? Object.keys(json.outputs) : [];
     const outputLines = {};
     for (const output of outputs) {
         const line = getLineNumber(options.contents, output);
