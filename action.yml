@@ -1,0 +1,19 @@
+name: 'Action to Mermaid'
+description: 'Convert action to Mermaid diagram'
+branding:
+  color: blue
+inputs:
+  nwo:
+    description: 'owner/repo path of action.yml (preferred) or action.yaml'
+    required: false
+    default: ${{ github.repository }}
+  token:
+    description: 'Token for authentication to GitHub API'
+    required: false
+    default: ${{ github.token }}
+outputs:
+  mermaid:
+    description: 'Mermaid diagram as plain text'
+runs:
+  using: 'node16'
+  main: 'dist/index.js'
